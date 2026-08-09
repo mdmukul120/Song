@@ -13,53 +13,48 @@ def scrape_hdvideo():
         )
     }
 
-    try:
-        response = requests.get(url, headers=headers, timeout=10)
-        response.raise_for_status()
-    except Exception as e:
-        print(f"Error fetching website: {e}")
-        return
-
-    soup = BeautifulSoup(response.text, "html.parser")
     video_list = []
 
-    # ওয়েবসাইটের স্ট্রাকচার অনুযায়ী সব ভিডিও লিঙ্ক বা আইটেম ব্লক খুঁজে বের করা
-    # সাধারণত <a> ট্যাগের মধ্যে লিঙ্ক থাকে
-    links = soup.find_all("a", href=True)
+    try:
+        response = requests.get(url, headers=headers, timeout=15)
+        response.raise_for_status()
 
-    for a in links:
-        href = a["href"]
+        soup = BeautifulSoup(response.text, "html.parser")
+        links = soup.find_all("a", href=True)
 
-        # যদি কোনো নির্দিষ্ট ভিডিও পেজ বা পেজ লিঙ্ক হয়
-        title = a.get_text(strip=True)
+        for a in links:
+            href = a["href"]
+            title = a.get_text(strip=True)
 
-        # ইমেজ খোঁজা (লিঙ্কের ভেতর বা কাছাকাছি)
-        img_tag = a.find("img")
-        img_url = img_tag["src"] if img_tag and "src" in img_tag.attrs else ""
-
-        # রেজুলেশন ম্যাচ করা (যেমন: 720p, 1080p, HD ইত্যাদি)
-        res_match = re.search(r"(\d{3,4}p|HD|4K)", title, re.IGNORECASE)
-        resolution = res_match.group(0) if res_match else "Unknown"
-
-        # MP4 লিঙ্ক সরাসরি থাকলে বা ডিরেক্ট ভিডিও লিঙ্ক
-        is_mp4 = href.endswith(".mp4")
-
-        if title and href:
-            video_list.append(
-                {
-                    "title": title,
-                    "page_url": href,
-                    "image": img_url,
-                    "resolution": resolution,
-                    "is_direct_mp4": is_mp4,
-                }
+            img_tag = a.find("img")
+            img_url = (
+                img_tag["src"] if img_tag and "src" in img_tag.attrs else ""
             )
 
-    # স্ক্র্যাপ করা ডেটা JSON ফাইলে সেভ করা
+            res_match = re.search(r"(\d{3,4}p|HD|4K)", title, re.IGNORECASE)
+            resolution = res_match.group(0) if res_match else "Unknown"
+
+            is_mp4 = href.endswith(".mp4")
+
+            if title and href:
+                video_list.append(
+                    {
+                        "title": title,
+                        "page_url": href,
+                        "image": img_url,
+                        "resolution": resolution,
+                        "is_direct_mp4": is_mp4,
+                    }
+                )
+
+    except Exception as e:
+        print(f"Error occurred during scraping: {e}")
+
+    # ওয়েবসাইট রেসপন্স দিক বা না দিক, ফাইলটি তৈরি হবে
     with open("data.json", "w", encoding="utf-8") as f:
         json.dump(video_list, f, ensure_ascii=False, indent=4)
 
-    print(f"Successfully scraped {len(video_list)} items.")
+    print(f"Successfully saved {len(video_list)} items to data.json")
 
 
 if __name__ == "__main__":
