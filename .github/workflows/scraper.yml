@@ -2,8 +2,8 @@ name: Hourly Video Scraper
 
 on:
   schedule:
-    - cron: '0 * * * *'  # প্রতি ১ ঘণ্টা পর পর স্বয়ংক্রিয়ভাবে চলবে
-  workflow_dispatch:      # ম্যানুয়ালি রান করার অপশন
+    - cron: '0 * * * *'
+  workflow_dispatch:
 
 jobs:
   scrape:
